@@ -424,7 +424,7 @@ class Pipeline(_BaseComposition):
                 return last_step.fit(Xt, y, **fit_params_last_step).transform(Xt)
 
     @available_if(_final_estimator_has("predict"))
-    def predict(self, X, **predict_params):
+    def predict(self, X, y=None, **predict_params):
         """Transform the data, and apply `predict` with the final estimator.
 
         Call `transform` of each transformer in the pipeline. The transformed
@@ -454,7 +454,7 @@ class Pipeline(_BaseComposition):
         """
         Xt = X
         for _, name, transform in self._iter(with_final=False):
-            Xt = transform.transform(Xt)
+            Xt = transform.transform(Xt, y=y)
         return self.steps[-1][1].predict(Xt, **predict_params)
 
     @available_if(_final_estimator_has("fit_predict"))
@@ -608,7 +608,7 @@ class Pipeline(_BaseComposition):
         )
 
     @available_if(_can_transform)
-    def transform(self, X):
+    def transform(self, X, y=None):
         """Transform the data, and apply `transform` with the final estimator.
 
         Call `transform` of each transformer in the pipeline. The transformed
@@ -632,7 +632,7 @@ class Pipeline(_BaseComposition):
         """
         Xt = X
         for _, _, transform in self._iter():
-            Xt = transform.transform(Xt)
+            Xt = transform.transform(Xt, y=y)
         return Xt
 
     def _can_inverse_transform(self):
@@ -1186,7 +1186,7 @@ class FeatureUnion(TransformerMixin, _BaseComposition):
             for idx, (name, transformer, weight) in enumerate(transformers, 1)
         )
 
-    def transform(self, X):
+    def transform(self, X, y=None):
         """Transform X separately by each transformer, concatenate results.
 
         Parameters
@@ -1202,7 +1202,7 @@ class FeatureUnion(TransformerMixin, _BaseComposition):
             sum of `n_components` (output dimension) over transformers.
         """
         Xs = Parallel(n_jobs=self.n_jobs)(
-            delayed(_transform_one)(trans, X, None, weight)
+            delayed(_transform_one)(trans, X, y, weight)
             for name, trans, weight in self._iter()
         )
         if not Xs:

@@ -256,7 +256,7 @@ class _PredictScorer(_BaseScorer):
             Score function applied to prediction of estimator on X.
         """
 
-        y_pred = method_caller(estimator, "predict", X)
+        y_pred = method_caller(estimator, "predict", X, y_true)
         if sample_weight is not None:
             return self._sign * self._score_func(
                 y_true, y_pred, sample_weight=sample_weight, **self._kwargs
